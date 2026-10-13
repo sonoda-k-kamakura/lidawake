@@ -45,7 +45,7 @@ cd "$(mktemp -d)" && curl -L https://github.com/sonoda-k-kamakura/lidawake/archi
 - ☕ は通常どおり、☕ 45m は抑止中で残り 45 分、☕ ∞ は解除するまで抑止中です。
 - 抑止中はバッテリーを消費し、熱がこもります。バッグに入れるときは解除してください。
 
-ターミナルからは `lidawake 2h`、`lidawake off`、`lidawake status` が使えます。
+ターミナルからは `~/bin/lidawake 2h`、`~/bin/lidawake off`、`~/bin/lidawake status` が使えます。
 
 ## アンインストール
 
