@@ -30,7 +30,7 @@ brew install --cask swiftbar
 
 ### 3. lidawake をインストールする
 
-途中で Mac のパスワードを 1 回聞かれます。
+途中で Mac のパスワードを 1 回聞かれます。これは、スリープ設定の切り替え（`pmset -a disablesleep 0` と `1` の 2 コマンドだけ）を、毎回パスワードを入れずに実行できるようにするためです。許可する内容は `/etc/sudoers.d/lidawake` に書かれ、他のコマンドには影響しません。
 
 ```sh
 cd "$(mktemp -d)" && curl -L https://github.com/sonoda-k-kamakura/lidawake/archive/refs/heads/main.tar.gz | tar xz && ./lidawake-main/install.sh
@@ -52,10 +52,6 @@ cd "$(mktemp -d)" && curl -L https://github.com/sonoda-k-kamakura/lidawake/archi
 ```sh
 ~/.lidawake/uninstall.sh
 ```
-
-## 仕組み
-
-パスワードなしで実行できるようにするのは `pmset -a disablesleep 0` と `1` の 2 コマンドだけです。その設定は `/etc/sudoers.d/lidawake` に入ります。
 
 ## ライセンス
 
