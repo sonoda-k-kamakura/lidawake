@@ -47,6 +47,10 @@ cd "$(mktemp -d)" && curl -L https://github.com/sonoda-k-kamakura/lidawake/archi
 
 ターミナルからは `~/bin/lidawake 2h`、`~/bin/lidawake off`、`~/bin/lidawake status` が使えます。
 
+## うまく動かないとき
+
+☕ が出ない、またはメニューが押せないときは、SwiftBar を終了してから開き直してください。
+
 ## アンインストール
 
 ```sh
