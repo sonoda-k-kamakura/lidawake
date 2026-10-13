@@ -1,0 +1,92 @@
+#!/bin/zsh
+# lidawake — 蓋を閉じてもスリープしない時間をワンショットで設定する。
+#   指定した時間だけ pmset disablesleep=1 にし、ユーザー所有の detached タイマーで
+#   時間が来たら自動的に disablesleep=0 へ戻す（ターミナルを閉じても戻る）。
+#   全入口（tmux キーバインド / tmux ステータス / SwiftBar）がこのスクリプトを呼ぶ。
+#
+#   sudo は /etc/sudoers.d/lidawake で `pmset -a disablesleep 0|1` だけ NOPASSWD 化済み。
+set -euo pipefail
+
+PMSET=/usr/bin/pmset
+STATE="$HOME/.cache/lidawake"
+END="$STATE/end"   # 自動復帰する epoch 秒
+PID="$STATE/pid"   # 復帰タイマー（ユーザー所有 sh）の PID
+mkdir -p "$STATE"
+
+now() { /bin/date +%s }
+
+usage() {
+  cat <<'USAGE'
+lidawake — 蓋閉じスリープ抑止をタイマー付きで設定
+  lidawake 90        90分だけ抑止（数字のみ=分）
+  lidawake 2h        2時間だけ抑止
+  lidawake 30m       30分だけ抑止
+  lidawake on        無制限に抑止（off するまで戻らない）
+  lidawake off       今すぐ解除
+  lidawake status    残り秒数 / inf（無制限）/ 0（無効）を出力
+USAGE
+}
+
+# 入力を秒に変換（数字のみ=分、s/m/h サフィックス対応）
+to_seconds() {
+  local v="$1"
+  if   [[ "$v" =~ '^[0-9]+$'  ]]; then print -- $(( v * 60 ))
+  elif [[ "$v" =~ '^[0-9]+s$' ]]; then print -- ${v%s}
+  elif [[ "$v" =~ '^[0-9]+m$' ]]; then print -- $(( ${v%m} * 60 ))
+  elif [[ "$v" =~ '^[0-9]+h$' ]]; then print -- $(( ${v%h} * 3600 ))
+  else return 1
+  fi
+}
+
+# 既存の復帰タイマーを止める（ユーザー所有なので sudo 不要で kill 可能）
+stop_timer() {
+  [[ -f "$PID" ]] || return 0
+  local p; p="$(cat "$PID" 2>/dev/null || true)"
+  [[ -n "$p" ]] && kill "$p" 2>/dev/null || true
+  rm -f "$PID"
+}
+
+restore() {
+  stop_timer
+  sudo "$PMSET" -a disablesleep 0
+  rm -f "$END"
+}
+
+cmd="${1:-}"
+case "$cmd" in
+  ""|-h|--help|help) usage; exit 0 ;;
+  off|stop|0) restore; echo "解除しました（スリープ有効）"; exit 0 ;;
+  boot-reset)
+    # ログイン/再起動時に LaunchAgent から呼ばれる。
+    # lidawake が張った抑止 (状態ファイルあり) が残っていたら解除する。
+    #   - 無制限(inf): 再起動で勝手に戻らないので、ここで戻す
+    #   - 時間指定: 復帰タイマー(detached sleep)は再起動で死に取り残されるので、ここで戻す
+    # 状態ファイルが無ければ何もしない（lidawake 以外が設定した disablesleep には触れない）。
+    if [[ -s "$END" ]]; then sudo "$PMSET" -a disablesleep 0; fi
+    rm -f "$END" "$PID"
+    exit 0 ;;
+  on|inf|unlimited)
+    stop_timer
+    sudo "$PMSET" -a disablesleep 1
+    echo "inf" > "$END"
+    echo "蓋閉じスリープを無制限に抑止中（解除するまで戻りません）。"
+    exit 0 ;;
+  status)
+    if [[ -s "$END" ]]; then
+      e="$(cat "$END" 2>/dev/null || echo 0)"; n="$(now)"
+      if [[ "$e" == "inf" ]]; then echo "inf"; exit 0; fi
+      if [[ "$e" =~ '^[0-9]+$' ]] && (( e > n )); then echo $(( e - n )); exit 0; fi
+    fi
+    echo 0; exit 0 ;;
+esac
+
+sec="$(to_seconds "$cmd")" || { usage; exit 2; }
+(( sec >= 60 )) || { echo "最低 60 秒以上を指定してください"; exit 2; }
+
+stop_timer
+sudo "$PMSET" -a disablesleep 1
+echo $(( $(now) + sec )) > "$END"
+# 復帰タイマーはユーザー所有で起動。時間後に pmset で戻し、状態ファイルを掃除する。
+nohup sh -c "sleep $sec; sudo $PMSET -a disablesleep 0; rm -f '$END' '$PID'" >/dev/null 2>&1 &
+echo $! > "$PID"
+echo "蓋閉じスリープを ${cmd} 抑止中。$(( (sec + 59) / 60 )) 分後に自動で戻ります（ターミナルを閉じてもOK）。"
