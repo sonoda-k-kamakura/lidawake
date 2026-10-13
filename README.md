@@ -4,14 +4,39 @@ MacBook の蓋を閉じてもスリープしない時間を、メニューバー
 
 ## インストール
 
-ターミナルで次の 2 行を実行します。途中で Mac のパスワードを 1 回聞かれます。
+コマンドは「ターミナル」アプリで実行します。Spotlight（⌘ + スペース）で「ターミナル」と入力すると開けます。
+
+### 1. Homebrew を用意する
+
+Mac のアプリをコマンドで入れる仕組みです。次を実行して、バージョンが表示されれば入っているので、2 に進んでください。
+
+```sh
+brew --version
+```
+
+「command not found」と出た場合は、次でインストールします。途中で Mac のパスワードを聞かれ、終わりに表示される「Next steps」の案内に従って設定します。
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+### 2. SwiftBar をインストールする
+
+メニューバーに ☕ を出すためのアプリです。
 
 ```sh
 brew install --cask swiftbar
+```
+
+### 3. lidawake をインストールする
+
+途中で Mac のパスワードを 1 回聞かれます。
+
+```sh
 cd "$(mktemp -d)" && curl -L https://github.com/sonoda-k-kamakura/lidawake/archive/refs/heads/main.tar.gz | tar xz && ./lidawake-main/install.sh
 ```
 
-メニューバーに ☕ が出れば完了です。Homebrew が無い場合は [SwiftBar](https://swiftbar.app) を先に手動でインストールして、2 行目だけ実行してください。
+メニューバーに ☕ が出れば完了です。
 
 ## 使い方
 
