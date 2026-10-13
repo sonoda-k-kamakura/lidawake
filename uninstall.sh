@@ -1,5 +1,5 @@
 #!/bin/bash
-# lidawake アンインストーラ — install.sh が入れた 4 点をすべて取り除く。
+# lidawake アンインストーラ — install.sh が入れた 5 点をすべて取り除く。
 set -uo pipefail
 
 BIN="$HOME/bin/lidawake"
@@ -30,5 +30,7 @@ sudo rm -f "$SUDOERS_FILE"
 info "中核スクリプトと状態ファイルを削除"
 rm -f "$BIN"
 rm -rf "$HOME/.cache/lidawake"
+# 実行中のこのスクリプト自身も含む。bash は開いたファイルを読み続けられる。
+rm -rf "$HOME/.lidawake"
 
 info "アンインストール完了"

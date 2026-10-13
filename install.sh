@@ -1,7 +1,7 @@
 #!/bin/bash
 # lidawake インストーラ
-# 中核スクリプト / sudoers ルール / 起動時リセット LaunchAgent / SwiftBar プラグイン
-# の 4 点をこの順にセットアップする。再実行しても安全（冪等）。
+# 中核スクリプト / sudoers ルール / 起動時リセット LaunchAgent / SwiftBar プラグイン / アンインストーラ
+# の 5 点をこの順にセットアップする。再実行しても安全（冪等）。
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -9,6 +9,7 @@ BIN_DIR="$HOME/bin"
 PLIST_LABEL="com.lidawake.boot-reset"
 PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_LABEL}.plist"
 SUDOERS_FILE="/etc/sudoers.d/lidawake"
+HOME_DIR="$HOME/.lidawake"
 
 info()  { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 warn()  { printf '\033[1;33m警告:\033[0m %s\n' "$*"; }
@@ -45,15 +46,21 @@ launchctl bootstrap "gui/$(id -u)" "$PLIST_PATH"
 # ----- 4. SwiftBar プラグイン -----
 plugin_dir="$(defaults read com.ameba.SwiftBar PluginDirectory 2>/dev/null || true)"
 if [[ -z "$plugin_dir" ]]; then
-  warn "SwiftBar のプラグインフォルダが見つかりません。"
-  warn "  brew install --cask swiftbar でインストールし、初回起動でプラグインフォルダを設定後、"
-  warn "  swiftbar/lidawake.30s.sh をそのフォルダへコピーしてください。"
-else
-  plugin_dir="${plugin_dir/#\~/$HOME}"
-  info "SwiftBar プラグインを ${plugin_dir}/ へインストール"
-  install -m 0755 "$REPO_DIR/swiftbar/lidawake.30s.sh" "$plugin_dir/lidawake.30s.sh"
-  open -g "swiftbar://refreshallplugins" 2>/dev/null || true
+  plugin_dir="$HOME/Library/Application Support/SwiftBar/Plugins"
+  info "SwiftBar のプラグインフォルダを ${plugin_dir} に設定"
+  mkdir -p "$plugin_dir"
+  defaults write com.ameba.SwiftBar PluginDirectory -string "$plugin_dir"
 fi
+plugin_dir="${plugin_dir/#\~/$HOME}"
+info "SwiftBar プラグインを ${plugin_dir}/ へインストール"
+install -m 0755 "$REPO_DIR/swiftbar/lidawake.30s.sh" "$plugin_dir/lidawake.30s.sh"
+open -g -a SwiftBar 2>/dev/null || warn "SwiftBar が見つかりません。brew install --cask swiftbar でインストールしてください"
+open -g "swiftbar://refreshallplugins" 2>/dev/null || true
+
+# ----- 5. アンインストーラ -----
+# ダウンロードしたフォルダを消しても、どこからでも同じ場所で消せるようにする。
+mkdir -p "$HOME_DIR"
+install -m 0755 "$REPO_DIR/uninstall.sh" "$HOME_DIR/uninstall.sh"
 
 # ----- 動作確認 -----
 info "動作確認: lidawake status"

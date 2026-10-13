@@ -4,14 +4,14 @@ MacBook の蓋を閉じてもスリープしない時間を、メニューバー
 
 ## インストール
 
-1. [SwiftBar](https://swiftbar.app) をインストールして起動します。プラグインフォルダを聞かれたら、好きな場所を選んでください。
-2. ターミナルで次を実行します。途中で Mac のパスワードを 1 回聞かれます。
+ターミナルで次の 2 行を実行します。途中で Mac のパスワードを 1 回聞かれます。
 
-   ```sh
-   curl -L https://github.com/sonoda-k-kamakura/lidawake/archive/refs/heads/main.tar.gz | tar xz && cd lidawake-main && ./install.sh
-   ```
+```sh
+brew install --cask swiftbar
+cd "$(mktemp -d)" && curl -L https://github.com/sonoda-k-kamakura/lidawake/archive/refs/heads/main.tar.gz | tar xz && ./lidawake-main/install.sh
+```
 
-3. メニューバーに ☕ が出れば完了です。
+メニューバーに ☕ が出れば完了です。Homebrew が無い場合は [SwiftBar](https://swiftbar.app) を先に手動でインストールして、2 行目だけ実行してください。
 
 ## 使い方
 
@@ -24,7 +24,9 @@ MacBook の蓋を閉じてもスリープしない時間を、メニューバー
 
 ## アンインストール
 
-インストールしたフォルダで `./uninstall.sh` を実行します。
+```sh
+~/.lidawake/uninstall.sh
+```
 
 ## 仕組み
 
